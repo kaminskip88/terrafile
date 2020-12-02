@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -70,10 +71,7 @@ func main() {
 		wg.Add(1)
 		go func(m module) {
 			defer wg.Done()
-			g, err := detect(m.Source)
-			if err != nil {
-				log.Fatalln(err)
-			}
+			g := detect(m.Source)
 			modDir := filepath.Join(*ModuleDir, m.Name)
 			sn := s.get(m.Name)
 			if sn == "" {
@@ -84,13 +82,13 @@ func main() {
 				}
 				s.set(m.Name, ref)
 			} else {
-				// log.Debugf("Found state for module %s", m.Name)
+				log.Debugf("Found state for module %s", m.Name)
 				ref, err := g.GetState(m)
 				if err != nil {
 					log.Fatalln(err)
 				}
 				if ref != sn {
-					// log.Debugf("Update required for for module %s", m.Name)
+					log.Debugf("Update required for for module %s", m.Name)
 					_, err = g.Get(m, modDir)
 					if err != nil {
 						log.Fatalln(err)
@@ -128,9 +126,15 @@ func readTerrafile(path string) ([]module, error) {
 	return ms, nil
 }
 
-func detect(source string) (get, error) {
-	if filepath.IsAbs(source) {
-		return new(getFile), nil
+func detect(source string) get {
+	gitSubstrs := []string{
+		"git@",
+		"https://",
 	}
-	return new(getGit), nil
+	for _, i := range gitSubstrs {
+		if strings.HasPrefix(source, i) {
+			return new(getGit)
+		}
+	}
+	return new(getFile)
 }

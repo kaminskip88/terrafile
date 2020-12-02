@@ -8,12 +8,13 @@ import (
 	"path/filepath"
 
 	"github.com/otiai10/copy"
+	log "github.com/sirupsen/logrus"
 )
 
 type getFile struct{}
 
 func (g getFile) Get(m module, dst string) (string, error) {
-	// log.Printf("Getting local module from %s to %s\n", src, dst)
+	log.Debugf("Getting local module from %s to %s", m.Source, dst)
 	if err := copy.Copy(m.Source, dst); err != nil {
 		return "", fmt.Errorf("Error copying module from local path %s: %v", m.Source, err)
 	}
@@ -34,16 +35,33 @@ func (g getFile) GetState(m module) (string, error) {
 }
 
 func hashDir(path string) (string, error) {
-	hash := md5.New()
-	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+	h := md5.New()
+	err := filepath.Walk(path, func(file string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
-		io.WriteString(hash, path)
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+		f, err := os.Open(file)
+		if err != nil {
+			return err
+		}
+		hf := md5.New()
+		_, err = io.Copy(hf, f)
+		if err != nil {
+			return err
+		}
+		// extract relative path only
+		rp := file
+		if path != "." {
+			rp = file[len(path)+1:]
+		}
+		fmt.Fprintf(h, "%x  %s\n", hf.Sum(nil), rp)
 		return nil
 	})
 	if err != nil {
-		return "", nil
+		return "", err
 	}
-	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }

@@ -49,12 +49,24 @@ func (g getGit) GetState(m module) (string, error) {
 	if m.Version == "" {
 		version = "master"
 	}
-	cmd := exec.Command("git", "ls-remote", "--quiet", m.Source, version)
+	cmd := exec.Command("git", "ls-remote", "--quiet", m.Source, version, version+"^{}")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("Error reading git remote %s: %v", m.Source, err)
 	}
-	commit := strings.Fields(out.String())[0]
+	if out.String() == "" {
+		return "", fmt.Errorf("Remote ref not found: %s, ref %v", m.Source, version)
+	}
+	lines := strings.Split(out.String(), "\n")
+	line := lines[0]
+	if len(lines) > 1 {
+		for _, i := range lines {
+			if strings.HasSuffix(i, "^{}") {
+				line = i
+			}
+		}
+	}
+	commit := strings.Fields(line)[0]
 	return commit, nil
 }
