@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/otiai10/copy"
 )
 
 type getGit struct{}
@@ -38,7 +40,8 @@ func (g getGit) Get(m module, dst string) (string, error) {
 	}
 	sfPath := filepath.Join(dir, m.Subfolder)
 	os.RemoveAll(dst)
-	if err = os.Rename(sfPath, dst); err != nil {
+	// if err = os.Rename(sfPath, dst); err != nil {
+	if err = copy.Copy(sfPath, dst); err != nil {
 		return "", fmt.Errorf("Error copying repo subfolder: %v", err)
 	}
 	return out.String(), nil

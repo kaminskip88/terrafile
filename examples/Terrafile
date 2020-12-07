@@ -1,0 +1,9 @@
+aws-vpc:
+    source: "git@github.com:terraform-aws-modules/terraform-aws-vpc"
+    version: "v1.46.0"
+simple-vpc:
+    source: "git@github.com:terraform-aws-modules/terraform-aws-vpc"
+    version: "v2.52.0"
+    subfolder:  "examples/simple-vpc"
+aws-vpc-master:
+    source: "git@github.com:terraform-aws-modules/terraform-aws-vpc"

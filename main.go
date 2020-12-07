@@ -37,7 +37,7 @@ type module struct {
 func main() {
 	// parse flags
 	Terrafile := flag.String("f", "./Terrafile", "Path to Terrafile")
-	ModuleDir := flag.String("m", "./.modules", "Module folder")
+	ModuleDir := flag.String("m", "./_modules", "Module folder")
 	Verbose := flag.Bool("v", false, "Verbose output")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, usage, os.Args[0])
@@ -63,6 +63,11 @@ func main() {
 	err = s.load()
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	// ensure module folder exists
+	if _, err := os.Stat(*ModuleDir); os.IsNotExist(err) {
+		os.Mkdir(*ModuleDir, 0755)
 	}
 
 	// get modules
