@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/otiai10/copy"
+	log "github.com/sirupsen/logrus"
 )
 
 type getGit struct{}
@@ -25,7 +25,7 @@ func (g getGit) Get(m module, dst string) (string, error) {
 		return "", fmt.Errorf("Error creating temp folder at /tmp: %v", err)
 	}
 	defer os.RemoveAll(dir)
-	log.Printf("Getting git module version: %s from %s\n", version, m.Source)
+	log.Infof("Getting git module version: %s from %s\n", version, m.Source)
 	cmd := exec.Command("git", "clone", "--single-branch", "--depth=1", "-b", version, m.Source, dir)
 	err = cmd.Run()
 	if err != nil {

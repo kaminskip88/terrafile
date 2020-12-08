@@ -14,7 +14,8 @@ import (
 type getFile struct{}
 
 func (g getFile) Get(m module, dst string) (string, error) {
-	log.Debugf("Getting local module from %s to %s", m.Source, dst)
+	log.Infof("Getting local module from %s to %s", m.Source, dst)
+	os.RemoveAll(dst)
 	if err := copy.Copy(m.Source, dst); err != nil {
 		return "", fmt.Errorf("Error copying module from local path %s: %v", m.Source, err)
 	}
